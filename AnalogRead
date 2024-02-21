@@ -1,0 +1,17 @@
+void setup() {
+
+  Serial.begin(115200);
+
+  analogReadResolution(12);
+}
+
+void loop() {
+  
+  int analogValue = analogRead(2);
+  int analogVolts = analogReadMilliVolts(2);
+
+  Serial.printf("ADC analog value = %d\n",analogValue);
+  Serial.printf("ADC millivolts value = %d\n",analogVolts);
+  
+  delay(100);
+}
