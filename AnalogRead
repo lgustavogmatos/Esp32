@@ -7,8 +7,8 @@ void setup() {
 
 void loop() {
   
-  int analogValue = analogRead(2);
-  int analogVolts = analogReadMilliVolts(2);
+  int analogValue = analogRead(26);
+  int analogVolts = analogReadMilliVolts(26);
 
   Serial.printf("ADC analog value = %d\n",analogValue);
   Serial.printf("ADC millivolts value = %d\n",analogVolts);
