@@ -1,0 +1,126 @@
+//==============================================//
+#define led_yellow 5
+#define led_red 4
+#define buzzerPino 19
+#define temp 27
+#define luminosidade 25
+static const int servoPin = 23;
+//==============================================//
+#include <ESP32Servo.h>
+#include "BluetoothSerial.h"
+//Verifica se o bluetooth esta habilitado corretamente
+#if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
+#error Bluetooth is not enabled! Please run make menuconfig to and enable it
+#endif
+//==============================================//
+char dado;
+
+//Cria uma instância de BluetoothSerial chamado SerialBT
+BluetoothSerial SerialBT;
+Servo servo1;
+//---Protótipo das Funções Auxiliares---//
+void configuracao();
+void leBluetooth();
+void escreveBluetooth();
+
+//---Função Principal---//
+void setup() 
+{
+ Serial.begin(115200);
+servo1.attach(servoPin);
+configuracao();  
+analogReadResolution(12);
+
+}
+
+//---Loop Infinito---//
+void loop() 
+{
+leBluetooth();
+
+
+
+
+}
+
+//---Funções Auxiliares---//
+void configuracao()
+{
+SerialBT.begin("Sistema de Automacao ESP32");
+Serial.println("O dispositivo foi iniciado, agora você pode emparelhá-lo com bluetooth!");
+pinMode(led_yellow,OUTPUT);
+pinMode(led_red,OUTPUT);  
+pinMode(buzzerPino,OUTPUT);
+
+}
+//==============================================//
+void leBluetooth()
+{
+  if (SerialBT.available()) 
+  {
+
+  dado=(SerialBT.read());
+  Serial.write(SerialBT.read());
+  escreveBluetooth();
+  } 
+}
+//==============================================//
+void escreveBluetooth()
+{
+  if(dado=='+') 
+  {
+  digitalWrite(led_yellow,HIGH);
+  digitalWrite(led_red,LOW);
+  tone(buzzerPino, 500);
+  delay(400);
+  noTone(buzzerPino);
+   for(int posDegrees = 0; posDegrees <= 90; posDegrees++) {
+    servo1.write(posDegrees);
+    delay(20);
+  }
+
+  if (int analogVolts = analogRead(luminosidade) >= 3000){
+  Serial.printf("Luminosidade Baixa \n");
+  }
+  else{
+  Serial.printf("Luminosidade Alta\n ");
+  }
+   if (int analogValue = analogRead(temp)>= 2000){
+  Serial.printf("Temperatura Ambiente\n ");
+  }
+  else{
+  Serial.printf("Temperatura Abaixo do normal\n");
+  }
+
+  SerialBT.print("Rotacionado Sentido Horario\n");
+  Serial.println("Rotacionado Sentido Horario\n");
+  }
+    if(dado=='-')
+    {
+    digitalWrite(led_yellow,LOW);
+    digitalWrite(led_red,HIGH);
+    tone(buzzerPino, 1000);
+    delay(400);
+    noTone(buzzerPino);
+    for(int posDegrees = 90; posDegrees >= 0; posDegrees--) {
+    servo1.write(posDegrees);
+    delay(20);
+  }
+    if (int analogVolts = analogRead(luminosidade)>= 3000){
+  Serial.printf("Luminosidade Baixa\n ");
+  }
+  else{
+  Serial.printf("Luminosidade Alta\n ");
+  }
+   if (int analogValue = analogRead(temp)>= 2000){
+  Serial.printf("Temperatura Ambiente\n ");
+  }
+  else{
+  Serial.printf("Temperatura Abaixo do normal\n");
+  }
+
+    SerialBT.print("Rotacionado Sentido Antihorario\n");
+    Serial.println("Rotacionado Sentido Antihorario\n");
+ 
+}
+}
