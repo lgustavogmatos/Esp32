@@ -1,32 +1,37 @@
-#include <Servo.h>
+#define pinServo 5
 
-Servo myServo;  // create a servo object
+#include <ESP32Servo.h>
+#include "BluetoothSerial.h"
 
-int const potPin = A0;  // analog pin used to connect the potentiometer
-int potVal;             // variable to read the value from the analog pin
-int angle;              // variable to hold the angle for the servo motor
+BluetoothSerial SerialBT;
+Servo servo1;
+
+void configuracao();
+void leBluetooth();
+
 
 void setup() {
-  myServo.attach(9);   // attaches the servo on pin 9 to the servo object
-  Serial.begin(9600);  // open a serial connection to your computer
+  servo1.attach(pinServo);
+  Serial.begin(115200);
+  configuracao();
 }
 
 void loop() {
-  potVal = analogRead(potPin);  // read the value of the potentiometer
-  // print out the value to the Serial Monitor
-  Serial.print("potVal: ");
-  Serial.print(potVal);
+  leBluetooth();
+}
 
-  // scale the numbers from the pot
-  angle = map(potVal, 0, 1023, 0, 179);
+void configuracao() {
+  SerialBT.begin("Sistema de Automacao ESP32");
+  Serial.println("O dispositivo foi iniciado, agora você pode emparelhá-lo com bluetooth!");
+}
 
-  // print out the angle for the servo motor
-  Serial.print(", angle: ");
-  Serial.println(angle);
+void leBluetooth() {
+  if (SerialBT.available()) {
+    int grau = SerialBT.parseInt(); // Lê o valor do ângulo enviado via Bluetooth
+    while (SerialBT.read() != '\n'); // Espera até que a linha seja totalmente lida
 
-  // set the servo position
-  myServo.write(angle);
-
-  // wait for the servo to get there
-  delay(15);
+    servo1.write(grau); // Define o ângulo do servo com base no valor lido
+    Serial.print("Angulo: ");
+    Serial.println(grau);
+  }
 }
