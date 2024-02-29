@@ -1,28 +1,56 @@
-#define pinServo 5
+//Não testado por falta de memória
 
+#include <WiFi.h>
+#include "ThingSpeak.h"
 #include <ESP32Servo.h>
 #include "BluetoothSerial.h"
 
+#define pinServo 5
+
+const char* ssid = "VIVOFIBRA-24F1";   // Nome da rede Wi-Fi
+const char* password = "kjyAk2T2up";   // Senha da rede Wi-Fi
+const char* bluetoothName = "Sistema de Automacao ESP32"; // Nome do dispositivo Bluetooth
+
+WiFiClient client;
 BluetoothSerial SerialBT;
 Servo servo1;
 
-void configuracao();
-void leBluetooth();
+unsigned long myChannelNumber = 2450431;
+const char* myWriteAPIKey = "mwa0000033165026";
 
+unsigned long lastTime = 0;
+const unsigned long timerDelay = 30000; // Reduzir a precisão para 30 segundos
 
 void setup() {
   servo1.attach(pinServo);
   Serial.begin(115200);
-  configuracao();
+  SerialBT.begin(bluetoothName);
+  WiFi.mode(WIFI_STA);
+  connectToWiFi();
+  ThingSpeak.begin(client);
 }
 
 void loop() {
-  leBluetooth();
+  if (millis() - lastTime > timerDelay) {
+    if (WiFi.status() != WL_CONNECTED) {
+      connectToWiFi(); 
+    }
+    
+    leBluetooth();
+
+    int analogValue = servo1.read(); // Lê o valor do pino analógico do servo
+    ThingSpeak.setField(1, analogValue);
+    ThingSpeak.writeFields(myChannelNumber, myWriteAPIKey);
+    
+    lastTime = millis();
+  }
 }
 
-void configuracao() {
-  SerialBT.begin("Sistema de Automacao ESP32");
-  Serial.println("O dispositivo foi iniciado, agora você pode emparelhá-lo com bluetooth!");
+void connectToWiFi() {
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+  }
 }
 
 void leBluetooth() {
@@ -31,7 +59,5 @@ void leBluetooth() {
     while (SerialBT.read() != '\n'); // Espera até que a linha seja totalmente lida
 
     servo1.write(grau); // Define o ângulo do servo com base no valor lido
-    Serial.print("Angulo: ");
-    Serial.println(grau);
   }
 }
